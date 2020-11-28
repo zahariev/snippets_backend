@@ -5,7 +5,9 @@ const Snippet = require("../model/Snippet");
 const { snippetValidation } = require("../validation");
 
 router.get("/", verify, (req, res) => {
-  res.send(req.user);
+  Snippet.find({}, (err, snippets) => {
+    res.send({ snippets: snippets });
+  });
 });
 
 router.post("/add", verify, async (req, res) => {
