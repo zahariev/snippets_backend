@@ -18,7 +18,10 @@ router.post("/add", verify, async (req, res) => {
   const snippet = new Snippet({
     title: req.body.title,
     code: req.body.code,
-    tags: req.body.tags,
+    tags: req.body.tags
+      .replace(/(\b \w+\b)(?=.*\1)/gi, "")
+      .trim()
+      .split(" "),
     createdBy: req.user,
   });
 
