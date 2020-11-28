@@ -30,4 +30,43 @@ router.post("/add", verify, async (req, res) => {
   }
 });
 
+router.post("/vote", verify, async (req, res) => {
+  //check if voted
+  const voteExist = await Snippet.findOne({
+    _id: req.body.snippetId,
+    likes: { $elemMatch: { $eq: req.user._id } },
+  });
+  // savevote
+  if (!voteExist) {
+    const vote = await Snippet.update(
+      {
+        _id: req.body.snippetId,
+      },
+      {
+        $inc: { countLikes: 1 },
+        $push: { likes: req.user._id },
+      }
+    );
+
+    return res.send(vote);
+  } else {
+    // remove vote
+    try {
+      const vote = await Snippet.update(
+        {
+          _id: req.body.snippetId,
+        },
+        {
+          $inc: { countLikes: -1 },
+          $pull: { likes: req.user._id },
+        }
+      );
+
+      return res.send(vote);
+    } catch (err) {
+      res.status(400).send(err.message);
+    }
+  }
+});
+
 module.exports = router;
