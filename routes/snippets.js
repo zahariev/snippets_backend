@@ -36,11 +36,13 @@ router.post("/add", verify, async (req, res) => {
 router.put("/:id", verify, async (req, res) => {
   const { error } = snippetValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
+
+  //find and replace duplicates
   const tagArr = req.body.tags
-    .replace(/(\b  \w+\b)(?=.*\1)/gi, "")
+    .replaceAll(",", " ")
+    .replace(/(\b\w+\b)(?=.*\b\1\b)/gi, "")
     .trim()
     .split(" ");
-
   const snippet = Snippet.findByIdAndUpdate(
     req.params.id,
     {
@@ -54,7 +56,7 @@ router.put("/:id", verify, async (req, res) => {
     }
   );
 
-  res.send("done");
+  res.send("Done");
 });
 
 router.delete("/:id", verify, async (req, res) => {
