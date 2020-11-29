@@ -26,6 +26,10 @@ const snippetSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  modified: {
+    type: Date,
+    default: Date.now,
+  },
   date: {
     type: Date,
     default: Date.now,

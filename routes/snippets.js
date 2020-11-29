@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { Request, Response } = require("express");
 const verify = require("./verifyToken");
 const Snippet = require("../model/Snippet");
 
@@ -14,7 +15,6 @@ router.post("/add", verify, async (req, res) => {
   const { error } = snippetValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  // register user
   const snippet = new Snippet({
     title: req.body.title,
     code: req.body.code,
@@ -28,6 +28,43 @@ router.post("/add", verify, async (req, res) => {
   try {
     const savedSnippet = await snippet.save();
     res.send({ snippet: savedSnippet });
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+router.put("/:id", verify, async (req, res) => {
+  const { error } = snippetValidation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+  const tagArr = req.body.tags
+    .replace(/(\b  \w+\b)(?=.*\1)/gi, "")
+    .trim()
+    .split(" ");
+
+  const snippet = Snippet.findByIdAndUpdate(
+    req.params.id,
+    {
+      title: req.body.title,
+      code: req.body.code,
+      tags: tagArr,
+      modified: new Date(),
+    },
+    (err) => {
+      res.status(400).send(err.message);
+    }
+  );
+
+  res.send("done");
+});
+
+router.delete("/:id", verify, async (req, res) => {
+  const { error } = snippetValidation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  try {
+    const snippet = Snippet.findByIdAndDelete(req.params.id);
+
+    res.send({ snippet: snippet });
   } catch (err) {
     res.status(400).send(err.message);
   }
