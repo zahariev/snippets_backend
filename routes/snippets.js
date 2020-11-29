@@ -23,6 +23,7 @@ router.post("/add", verify, async (req, res) => {
       .trim()
       .split(" "),
     createdBy: req.user,
+    private: req.body.private,
   });
 
   try {
@@ -55,6 +56,7 @@ router.put("/:id", verify, async (req, res) => {
         .trim()
         .split(" "),
       modified: new Date(),
+      private: req.body.private,
     },
     (err, result) => {
       if (err) {
