@@ -56,11 +56,11 @@ router.put("/:id", verify, async (req, res) => {
         .split(" "),
       modified: new Date(),
     },
-    (err, res) => {
+    (err, result) => {
       if (err) {
         console.log(err);
       } else {
-        console.log("Updated User : ", res);
+        res.send(result);
       }
     }
   );
@@ -73,7 +73,7 @@ router.delete("/:id", verify, async (req, res) => {
   try {
     const snippet = Snippet.findByIdAndDelete(req.params.id);
 
-    res.send({ snippet: snippet });
+    res.send("Done");
   } catch (err) {
     res.status(400).send(err.message);
   }
