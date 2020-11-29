@@ -43,20 +43,27 @@ router.put("/:id", verify, async (req, res) => {
     .replace(/(\b\w+\b)(?=.*\b\1\b)/gi, "")
     .trim()
     .split(" ");
+
   const snippet = Snippet.findByIdAndUpdate(
     req.params.id,
     {
       title: req.body.title,
       code: req.body.code,
-      tags: tagArr,
+      tags: req.body.tags
+        .replaceAll(",", " ")
+        .replace(/(\b\w+\b)(?=.*\b\1\b)/gi, "")
+        .trim()
+        .split(" "),
       modified: new Date(),
     },
-    (err) => {
-      res.status(400).send(err.message);
+    (err, res) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("Updated User : ", res);
+      }
     }
   );
-
-  res.send("Done");
 });
 
 router.delete("/:id", verify, async (req, res) => {
