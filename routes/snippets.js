@@ -5,19 +5,19 @@ const Snippet = require("../model/Snippet");
 
 const { snippetValidation } = require("../validation");
 
-router.get("/", verify, (req, res) => {
+router.get("/all", verify, (req, res) => {
   Snippet.find({}, (err, snippets) => {
-    res.send({ snippets: snippets });
+    res.send(snippets);
   });
 });
 
 router.get("/", (req, res) => {
   Snippet.find({ private: false }, (err, snippets) => {
-    res.send({ snippets: snippets });
+    res.send(snippets);
   });
 });
 
-router.post("/add", verify, async (req, res) => {
+router.post("/add", async (req, res) => {
   const { error } = snippetValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -25,10 +25,12 @@ router.post("/add", verify, async (req, res) => {
     title: req.body.title,
     code: req.body.code,
     tags: req.body.tags
-      .replace(/(\b \w+\b)(?=.*\1)/gi, "")
-      .trim()
-      .split(" "),
-    createdBy: req.user,
+      ? req.body.tags
+          .replace(/(\b \w+\b)(?=.*\1)/gi, "")
+          .trim()
+          .split(" ")
+      : [],
+    createdBy: req.body.user,
     private: req.body.private,
   });
 
