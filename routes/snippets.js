@@ -11,6 +11,12 @@ router.get("/", verify, (req, res) => {
   });
 });
 
+router.get("/", (req, res) => {
+  Snippet.find({ private: false }, (err, snippets) => {
+    res.send({ snippets: snippets });
+  });
+});
+
 router.post("/add", verify, async (req, res) => {
   const { error } = snippetValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);

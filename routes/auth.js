@@ -51,7 +51,10 @@ router.post("/authenticate", async (req, res) => {
     { _id: user.id, is_admin: user.isAdmin },
     process.env.TOKEN_SECRET
   );
-  res.header("auth-token", token).send(token);
+  res.header("auth-token", token).send({
+    access_token: "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+    token_type: "bearer",
+  });
   //   res.send("logged in");
 });
 
