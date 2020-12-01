@@ -2,7 +2,8 @@ const Joi = require("joi");
 
 const registerValidation = (data) => {
   const schema = Joi.object({
-    name: Joi.string().min(6).required(),
+    firstName: Joi.string().min(4).required(),
+    lastName: Joi.string().min(4).required(),
     username: Joi.string().min(6).required().email(),
     password: Joi.string().min(6).required(),
   });
@@ -12,9 +13,9 @@ const registerValidation = (data) => {
 
 const snippetValidation = (data) => {
   const schema = Joi.object({
-    title: Joi.string().min(6).required(),
+    title: Joi.string().min(4).required(),
     code: Joi.string().min(6).required(),
-    tags: Joi.string().min(6),
+    tags: Joi.string().min(4),
   });
 
   return schema.validate(data);
