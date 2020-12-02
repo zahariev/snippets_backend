@@ -6,15 +6,74 @@ const Snippet = require("../model/Snippet");
 const { snippetValidation } = require("../validation");
 
 router.get("/all", verify, (req, res) => {
-  Snippet.find({}, (err, snippets) => {
-    res.send(snippets);
-  });
+  Snippet.aggregate(
+    [
+      {
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "createdBy",
+        },
+      },
+      { $unwind: "$createdBy" },
+      {
+        $project: {
+          createdBy: "$createdBy.lastName",
+          id: 1,
+          title: 1,
+          code: 1,
+          tags: 1,
+          likes: 1,
+          countLikes: 1,
+          modified: 1,
+          private: 1,
+          date: 1,
+        },
+      },
+    ],
+
+    (err, snippets) => {
+      res.send(snippets);
+    }
+  );
 });
 
 router.get("/", (req, res) => {
-  Snippet.find({ private: false }, (err, snippets) => {
-    res.send(snippets);
-  });
+  Snippet.aggregate(
+    [
+      {
+        $match: { private: false },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "createdBy",
+        },
+      },
+      { $unwind: "$createdBy" },
+      {
+        $project: {
+          createdBy: "$createdBy.lastName",
+          id: 1,
+          title: 1,
+          code: 1,
+          tags: 1,
+          likes: 1,
+          countLikes: 1,
+          modified: 1,
+          private: 1,
+          date: 1,
+        },
+      },
+    ],
+
+    (err, snippets) => {
+      res.send(snippets);
+    }
+  );
 });
 
 router.post("/add", async (req, res) => {
