@@ -5,6 +5,47 @@ const Snippet = require("../model/Snippet");
 
 const { snippetValidation } = require("../validation");
 
+router.get("/tags", (req, res) => {
+  Snippet.distinct("tags", (err, snippets) => {
+    if (!err) res.send(snippets);
+    else console.log(err);
+  });
+  //.aggregate(
+  //   [
+  //     { $sort: { date: -1 } },
+
+  //     {
+  //       $lookup: {
+  //         from: "users",
+  //         localField: "createdBy",
+  //         foreignField: "_id",
+  //         as: "created",
+  //       },
+  //     },
+  //     { $unwind: "$createdBy" },
+  //     {
+  //       $project: {
+  //         created: "$created.lastName",
+  //         id: 1,
+  //         title: 1,
+  //         code: 1,
+  //         tags: 1,
+  //         likes: 1,
+  //         createdBy: 1,
+  //         countLikes: 1,
+  //         modified: 1,
+  //         private: 1,
+  //         date: 1,
+  //       },
+  //     },
+  //   ],
+
+  //   (err, snippets) => {
+  //     if (!err) res.send(snippets);
+  //   }
+  // );
+});
+
 router.get("/all", verify, (req, res) => {
   if (req.user.isAdmin) {
     // returns All snippets
@@ -175,7 +216,11 @@ router.post("/add", verify, async (req, res) => {
     code: req.body.code,
     tags: req.body.tags
       ? req.body.tags
-          .replace(/(\b \w+\b)(?=.*\1)/gi, "")
+          .trim()
+          .replaceAll(/\s\s+/g, " ")
+          .replaceAll(".", "")
+          .replace(/\b(\w+)\b(?=.*?\b\1\b)/gi, "")
+          .replaceAll(/ +(?= )/g, "")
           .trim()
           .split(" ")
       : [],
