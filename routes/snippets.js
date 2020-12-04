@@ -10,6 +10,8 @@ router.get("/all", verify, (req, res) => {
     // returns All snippets
     Snippet.aggregate(
       [
+        { $sort: { date: -1 } },
+
         {
           $lookup: {
             from: "users",
@@ -42,9 +44,9 @@ router.get("/all", verify, (req, res) => {
     );
   } // public + own snippets
   else {
-    console.log(req.user);
     Snippet.aggregate(
       [
+        { $sort: { date: -1 } },
         {
           $lookup: {
             from: "users",
@@ -85,26 +87,29 @@ router.get("/all", verify, (req, res) => {
 router.get("/", (req, res) => {
   Snippet.aggregate(
     [
+      { $sort: { date: -1 } },
       {
         $match: { private: false },
       },
+
       {
         $lookup: {
           from: "users",
           localField: "createdBy",
           foreignField: "_id",
-          as: "createdBy",
+          as: "created",
         },
       },
       { $unwind: "$createdBy" },
       {
         $project: {
-          createdBy: "$createdBy.lastName",
+          created: "$createdBy.lastName",
           id: 1,
           title: 1,
           code: 1,
           tags: 1,
           likes: 1,
+          createdBy: 1,
           countLikes: 1,
           modified: 1,
           private: 1,
@@ -114,6 +119,48 @@ router.get("/", (req, res) => {
     ],
 
     (err, snippets) => {
+      if (!err) res.send(snippets);
+    }
+  );
+});
+
+router.get("/my", verify, (req, res) => {
+  console.log(req.user);
+  Snippet.aggregate(
+    [
+      { $sort: { date: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "created",
+        },
+      },
+      { $unwind: "$createdBy" },
+      {
+        $project: {
+          created: "$created.lastName",
+          id: 1,
+          title: 1,
+          code: 1,
+          tags: 1,
+          likes: 1,
+          createdBy: 1,
+          countLikes: 1,
+          modified: 1,
+          private: 1,
+          date: 1,
+        },
+      },
+
+      {
+        $match: { created: req.user.name },
+      },
+    ],
+
+    (err, snippets) => {
+      console.log(err);
       if (!err) res.send(snippets);
     }
   );
