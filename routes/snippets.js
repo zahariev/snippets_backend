@@ -271,17 +271,18 @@ router.put("/:id", verify, async (req, res) => {
 });
 
 router.delete("/:id", verify, async (req, res) => {
-  console.log(req.params.id);
-  try {
-    const snippet = Snippet.findByIdAndDelete(
-      require("mongoose").Types.ObjectId(req.params.id),
-      (err) => {
-        console.log(err);
-        res.send("Done");
-      }
-    );
-  } catch (err) {
-    res.status(400).send(err.message);
+  if (req.user.isAdmin) {
+    try {
+      const snippet = Snippet.findByIdAndDelete(
+        require("mongoose").Types.ObjectId(req.params.id),
+        (err, result) => {
+          if (err) res.status(400).send(err.message);
+          else res.send(result);
+        }
+      );
+    } catch (err) {
+      res.status(400).send(err.message);
+    }
   }
 });
 
