@@ -48,7 +48,7 @@ router.post("/authenticate", async (req, res) => {
 
   // create jwt token
   const token = jwt.sign(
-    { _id: user.id, name: user.lastName, is_admin: user.isAdmin },
+    { _id: user.id, name: user.lastName, isAdmin: user.isAdmin },
     process.env.TOKEN_SECRET
   );
   res.header("auth-token", token).send({
