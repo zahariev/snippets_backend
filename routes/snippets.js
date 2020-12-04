@@ -48,7 +48,7 @@ router.get("/tags", (req, res) => {
 
 router.get("/all", verify, (req, res) => {
   if (req.user.isAdmin) {
-    // returns All snippets
+    // returns All snippets, public, private
     Snippet.aggregate(
       [
         { $sort: { date: -1 } },
@@ -83,7 +83,8 @@ router.get("/all", verify, (req, res) => {
         if (!err) res.send(snippets);
       }
     );
-  } // public + own snippets
+  } // not admin gets
+  // all public + owned snippets
   else {
     Snippet.aggregate(
       [
@@ -126,6 +127,7 @@ router.get("/all", verify, (req, res) => {
 });
 
 router.get("/", (req, res) => {
+  // not logged
   Snippet.aggregate(
     [
       { $sort: { date: -1 } },
@@ -208,6 +210,7 @@ router.get("/my", verify, (req, res) => {
 });
 
 router.post("/add", verify, async (req, res) => {
+  if (!req.user.isAdmin) res.status(403).send(" Admins only! ");
   const { error } = snippetValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -271,18 +274,18 @@ router.put("/:id", verify, async (req, res) => {
 });
 
 router.delete("/:id", verify, async (req, res) => {
-  if (req.user.isAdmin) {
-    try {
-      const snippet = Snippet.findByIdAndDelete(
-        require("mongoose").Types.ObjectId(req.params.id),
-        (err, result) => {
-          if (err) res.status(400).send(err.message);
-          else res.send(result);
-        }
-      );
-    } catch (err) {
-      res.status(400).send(err.message);
-    }
+  if (!req.user.isAdmin) res.status(403).send(" Admins only! ");
+
+  try {
+    const snippet = Snippet.findByIdAndDelete(
+      require("mongoose").Types.ObjectId(req.params.id),
+      (err, result) => {
+        if (err) res.status(400).send(err.message);
+        else res.send(result);
+      }
+    );
+  } catch (err) {
+    res.status(400).send(err.message);
   }
 });
 
