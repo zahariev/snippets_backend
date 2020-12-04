@@ -6,37 +6,80 @@ const Snippet = require("../model/Snippet");
 const { snippetValidation } = require("../validation");
 
 router.get("/all", verify, (req, res) => {
-  Snippet.aggregate(
-    [
-      {
-        $lookup: {
-          from: "users",
-          localField: "createdBy",
-          foreignField: "_id",
-          as: "createdBy",
+  if (req.user.isAdmin) {
+    // returns All snippets
+    Snippet.aggregate(
+      [
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "created",
+          },
         },
-      },
-      { $unwind: "$createdBy" },
-      {
-        $project: {
-          createdBy: "$createdBy.lastName",
-          id: 1,
-          title: 1,
-          code: 1,
-          tags: 1,
-          likes: 1,
-          countLikes: 1,
-          modified: 1,
-          private: 1,
-          date: 1,
+        { $unwind: "$createdBy" },
+        {
+          $project: {
+            created: "$created.lastName",
+            id: 1,
+            title: 1,
+            code: 1,
+            tags: 1,
+            likes: 1,
+            createdBy: 1,
+            countLikes: 1,
+            modified: 1,
+            private: 1,
+            date: 1,
+          },
         },
-      },
-    ],
+      ],
 
-    (err, snippets) => {
-      res.send(snippets);
-    }
-  );
+      (err, snippets) => {
+        if (!err) res.send(snippets);
+      }
+    );
+  } // public + own snippets
+  else {
+    console.log(req.user);
+    Snippet.aggregate(
+      [
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "created",
+          },
+        },
+        { $unwind: "$createdBy" },
+        {
+          $project: {
+            created: "$created.lastName",
+            id: 1,
+            title: 1,
+            code: 1,
+            tags: 1,
+            likes: 1,
+            createdBy: 1,
+            countLikes: 1,
+            modified: 1,
+            private: 1,
+            date: 1,
+          },
+        },
+
+        {
+          $match: { $or: [{ created: req.user.name }, { private: false }] },
+        },
+      ],
+
+      (err, snippets) => {
+        if (!err) res.send(snippets);
+      }
+    );
+  }
 });
 
 router.get("/", (req, res) => {
@@ -71,12 +114,12 @@ router.get("/", (req, res) => {
     ],
 
     (err, snippets) => {
-      res.send(snippets);
+      if (!err) res.send(snippets);
     }
   );
 });
 
-router.post("/add", async (req, res) => {
+router.post("/add", verify, async (req, res) => {
   const { error } = snippetValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -89,7 +132,7 @@ router.post("/add", async (req, res) => {
           .trim()
           .split(" ")
       : [],
-    createdBy: req.body.user,
+    createdBy: req.user,
     private: req.body.private,
   });
 
@@ -151,28 +194,27 @@ router.delete("/:id", verify, async (req, res) => {
 router.post("/vote", verify, async (req, res) => {
   //check if voted
   const voteExist = await Snippet.findOne({
-    _id: req.body.snippetId,
+    _id: req.body.snippetID,
     likes: { $elemMatch: { $eq: req.user._id } },
   });
   // savevote
   if (!voteExist) {
     const vote = await Snippet.update(
       {
-        _id: req.body.snippetId,
+        _id: req.body.snippetID,
       },
       {
         $inc: { countLikes: 1 },
         $push: { likes: req.user._id },
       }
     );
-
     return res.send(vote);
   } else {
     // remove vote
     try {
       const vote = await Snippet.update(
         {
-          _id: req.body.snippetId,
+          _id: req.body.snippetID,
         },
         {
           $inc: { countLikes: -1 },
