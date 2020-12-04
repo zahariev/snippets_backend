@@ -226,13 +226,15 @@ router.put("/:id", verify, async (req, res) => {
 });
 
 router.delete("/:id", verify, async (req, res) => {
-  const { error } = snippetValidation(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
+  console.log(req.params.id);
   try {
-    const snippet = Snippet.findByIdAndDelete(req.params.id);
-
-    res.send("Done");
+    const snippet = Snippet.findByIdAndDelete(
+      require("mongoose").Types.ObjectId(req.params.id),
+      (err) => {
+        console.log(err);
+        res.send("Done");
+      }
+    );
   } catch (err) {
     res.status(400).send(err.message);
   }
