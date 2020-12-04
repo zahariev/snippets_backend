@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+ObjectId = mongoose.Schema.ObjectId;
 const snippetSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -23,7 +23,7 @@ const snippetSchema = new mongoose.Schema({
     default: 0,
   },
   createdBy: {
-    type: String,
+    type: ObjectId,
     required: true,
   },
   modified: {
