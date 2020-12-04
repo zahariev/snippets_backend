@@ -13,9 +13,10 @@ const registerValidation = (data) => {
 
 const snippetValidation = (data) => {
   const schema = Joi.object({
-    title: Joi.string().min(4).required(),
-    code: Joi.string().min(6).required(),
-    tags: Joi.string().min(4),
+    title: Joi.string().required(),
+    code: Joi.string().required(),
+    tags: Joi.string().required(),
+    private: Joi.boolean(),
   });
 
   return schema.validate(data);
