@@ -5,45 +5,29 @@ const Snippet = require("../model/Snippet");
 
 const { snippetValidation } = require("../validation");
 
-router.get("/tags", (req, res) => {
-  Snippet.distinct("tags", (err, snippets) => {
-    if (!err) res.send(snippets);
-    else console.log(err);
-  });
-  //.aggregate(
-  //   [
-  //     { $sort: { date: -1 } },
+router.get("/stats", (req, res) => {
+  // if (!req.user.isAdmin) res.status(403).send(" Admins only! ");
 
-  //     {
-  //       $lookup: {
-  //         from: "users",
-  //         localField: "createdBy",
-  //         foreignField: "_id",
-  //         as: "created",
-  //       },
-  //     },
-  //     { $unwind: "$createdBy" },
-  //     {
-  //       $project: {
-  //         created: "$created.lastName",
-  //         id: 1,
-  //         title: 1,
-  //         code: 1,
-  //         tags: 1,
-  //         likes: 1,
-  //         createdBy: 1,
-  //         countLikes: 1,
-  //         modified: 1,
-  //         private: 1,
-  //         date: 1,
-  //       },
-  //     },
-  //   ],
+  Snippet.aggregate(
+    [
+      { $project: { _id: 0, tags: 1, countLikes: 1 } },
+      { $unwind: "$tags" },
+      {
+        $group: {
+          _id: "$tags",
+          count: { $sum: 1 },
+          likes: { $sum: "$countLikes" },
+        },
+      },
+      { $project: { _id: 0, tag: "$_id", count: 1, likes: 1 } },
+      { $sort: { count: -1 } },
+    ],
 
-  //   (err, snippets) => {
-  //     if (!err) res.send(snippets);
-  //   }
-  // );
+    (err, snippets) => {
+      if (!err) res.send(snippets);
+      else console.log(err);
+    }
+  );
 });
 
 router.get("/all", verify, (req, res) => {
@@ -210,7 +194,6 @@ router.get("/my", verify, (req, res) => {
 });
 
 router.post("/add", verify, async (req, res) => {
-  if (!req.user.isAdmin) res.status(403).send(" Admins only! ");
   const { error } = snippetValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -297,7 +280,7 @@ router.post("/vote", verify, async (req, res) => {
   });
   // savevote
   if (!voteExist) {
-    const vote = await Snippet.update(
+    const vote = await Snippet.updateOne(
       {
         _id: req.body.snippetID,
       },
@@ -310,7 +293,7 @@ router.post("/vote", verify, async (req, res) => {
   } else {
     // remove vote
     try {
-      const vote = await Snippet.update(
+      const vote = await Snippet.updateOne(
         {
           _id: req.body.snippetID,
         },
