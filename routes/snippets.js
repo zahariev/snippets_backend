@@ -116,10 +116,6 @@ router.get("/", (req, res) => {
     [
       { $sort: { date: -1 } },
       {
-        $match: { private: false },
-      },
-
-      {
         $lookup: {
           from: "users",
           localField: "createdBy",
@@ -130,7 +126,7 @@ router.get("/", (req, res) => {
       { $unwind: "$createdBy" },
       {
         $project: {
-          created: "$createdBy.lastName",
+          created: "$created.lastName",
           id: 1,
           title: 1,
           code: 1,
@@ -142,6 +138,10 @@ router.get("/", (req, res) => {
           private: 1,
           date: 1,
         },
+      },
+
+      {
+        $match: { private: false },
       },
     ],
 
