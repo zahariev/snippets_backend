@@ -23,6 +23,7 @@ router.post("/register", async (req, res) => {
     lastName: req.body.lastName,
     username: req.body.username,
     password: hashedPassword,
+    isAdmin: req.body.isAdmin,
   });
 
   try {
