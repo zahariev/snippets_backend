@@ -141,7 +141,7 @@ router.get("/", (req, res) => {
       },
 
       {
-        $match: { private: false },
+        $match: { private: false  },
       },
     ],
 
@@ -194,22 +194,27 @@ router.get("/my", verify, (req, res) => {
 });
 
 router.post("/add", verify, async (req, res) => {
+  if (!req.user.isAdmin) res.status(403).send(" Admins only! ");
   const { error } = snippetValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
+
+  const tagsAsArr = [
+      ...new Set(
+        req.body.tags
+          ? req.body.tags
+              .replaceAll(".", "")
+              .trim()
+              .replaceAll(",", " ")
+              .replace(/\s\s+/g, " ")
+              .split(" ")
+          : []
+      ),
+    ],
 
   const snippet = new Snippet({
     title: req.body.title,
     code: req.body.code,
-    tags: req.body.tags
-      ? req.body.tags
-          .trim()
-          .replaceAll(/\s\s+/g, " ")
-          .replaceAll(".", "")
-          .replace(/\b(\w+)\b(?=.*?\b\1\b)/gi, "")
-          .replaceAll(/ +(?= )/g, "")
-          .trim()
-          .split(" ")
-      : [],
+    tags: tagsAsArray,
     createdBy: req.user,
     private: req.body.private,
   });
@@ -227,22 +232,24 @@ router.put("/:id", verify, async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   //find and replace duplicates
-  const tagArr = req.body.tags
-    .replaceAll(",", " ")
-    .replace(/(\b\w+\b)(?=.*\b\1\b)/gi, "")
-    .trim()
-    .split(" ");
-
+  const tagAsArr = [
+      ...new Set(
+        req.body.tags
+          ? req.body.tags
+              // .replaceAll(".", "") 
+              .trim()
+              .replaceAll(",", " ")
+              .replace(/\s\s+/g, " ")
+              .split(" ")
+          : []
+      ),
+    ],
   const snippet = Snippet.findByIdAndUpdate(
     req.params.id,
     {
       title: req.body.title,
       code: req.body.code,
-      tags: req.body.tags
-        .replaceAll(",", " ")
-        .replace(/(\b\w+\b)(?=.*\b\1\b)/gi, "")
-        .trim()
-        .split(" "),
+      tags: tagsAsArray,
       modified: new Date(),
       private: req.body.private,
     },
@@ -280,7 +287,7 @@ router.post("/vote", verify, async (req, res) => {
   });
   // savevote
   if (!voteExist) {
-    const vote = await Snippet.updateOne(
+    const vote = await Snippet.update(
       {
         _id: req.body.snippetID,
       },
@@ -293,7 +300,7 @@ router.post("/vote", verify, async (req, res) => {
   } else {
     // remove vote
     try {
-      const vote = await Snippet.updateOne(
+      const vote = await Snippet.update(
         {
           _id: req.body.snippetID,
         },
