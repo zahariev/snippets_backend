@@ -141,7 +141,7 @@ router.get("/", (req, res) => {
       },
 
       {
-        $match: { private: false  },
+        $match: { private: false },
       },
     ],
 
@@ -194,27 +194,24 @@ router.get("/my", verify, (req, res) => {
 });
 
 router.post("/add", verify, async (req, res) => {
-  if (!req.user.isAdmin) res.status(403).send(" Admins only! ");
   const { error } = snippetValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const tagsAsArr = [
+  const snippet = new Snippet({
+    title: req.body.title,
+    code: req.body.code,
+    tags: [
       ...new Set(
         req.body.tags
           ? req.body.tags
-              .replaceAll(".", "")
-              .trim()
+              // .replaceAll(".", "")
               .replaceAll(",", " ")
+              .trim()
               .replace(/\s\s+/g, " ")
               .split(" ")
           : []
       ),
     ],
-
-  const snippet = new Snippet({
-    title: req.body.title,
-    code: req.body.code,
-    tags: tagsAsArray,
     createdBy: req.user,
     private: req.body.private,
   });
@@ -232,24 +229,24 @@ router.put("/:id", verify, async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   //find and replace duplicates
-  const tagAsArr = [
-      ...new Set(
-        req.body.tags
-          ? req.body.tags
-              // .replaceAll(".", "") 
-              .trim()
-              .replaceAll(",", " ")
-              .replace(/\s\s+/g, " ")
-              .split(" ")
-          : []
-      ),
-    ],
+
   const snippet = Snippet.findByIdAndUpdate(
     req.params.id,
     {
       title: req.body.title,
       code: req.body.code,
-      tags: tagsAsArray,
+      tags: [
+        ...new Set(
+          req.body.tags
+            ? req.body.tags
+                // .replaceAll(".", "")
+                .replaceAll(",", " ")
+                .trim()
+                .replace(/\s\s+/g, " ")
+                .split(" ")
+            : []
+        ),
+      ],
       modified: new Date(),
       private: req.body.private,
     },
